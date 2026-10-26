@@ -121,4 +121,4 @@ Invoke-Gh variable set PULSEOPS_RUNNER_READY --repo $Repository --body true
 Invoke-RestMethod 'http://localhost:9001/api/settings' -Method Post -ContentType application/json -Body (@{repository="https://github.com/$Repository"} | ConvertTo-Json) | Out-Null
 Invoke-Gh workflow run deploy.yml --repo $Repository --ref main
 Write-Host "Connected. Your first real deployment is running: https://github.com/$Repository/actions" -ForegroundColor Green
-Write-Host 'After a reboot, run CONNECT-GITHUB.cmd again to reconnect the runner.'
+Write-Host 'After a reboot, START.cmd reconnects the registered runner automatically.'

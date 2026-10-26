@@ -43,6 +43,7 @@ Invoke-Compose up -d --pull never --wait --wait-timeout 120
 Write-Host '[5/5] Verifying live services...' -ForegroundColor Cyan
 & "$PSScriptRoot/verify.ps1"
 if (-not $?) { throw 'Live verification failed.' }
+Start-RegisteredRunner
 Write-Host "`nPulseOps is ready: http://localhost:9001" -ForegroundColor Green
 Write-Host 'Grafana opens without a login in read-only demo mode.'
 Write-Host 'Admin credentials are in the ignored .env file if you want to edit Grafana.'

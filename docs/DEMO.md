@@ -2,7 +2,7 @@
 
 ## Before class
 
-Run START.cmd once with internet access so images are downloaded. Complete CONNECT-GITHUB.cmd sign-in and confirm at least one successful real Actions run. Reconnect the runner after a reboot. Rehearse with `python scripts/rehearse.py`; save screenshots or a short recording of a successful run as a fallback for classroom internet issues. Keep the app version, workflow commit and release badge consistent.
+Run START.cmd once with internet access so images are downloaded. Complete CONNECT-GITHUB.cmd sign-in and confirm at least one successful real Actions run. After a reboot, START.cmd reconnects the registered runner automatically. Rehearse with `python scripts/rehearse.py`; save screenshots or a short recording of a successful run as a fallback for classroom internet issues. Keep the app version, workflow commit and release badge consistent.
 
 Open console, Grafana, GitHub Actions and (optionally) Prometheus in four tabs. Do not display `.env`, credential storage, registration tokens or runner diagnostic secrets. Open a PowerShell terminal in the project folder for the optional outage commands.
 

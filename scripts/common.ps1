@@ -65,4 +65,14 @@ function Test-Monitoring {
     Invoke-Compose run --rm --no-deps --volume "${Root}/monitoring:/work:ro" --workdir /work --entrypoint promtool prometheus test rules /work/rules.test.yml
     Invoke-Compose run --rm --no-deps --entrypoint amtool alertmanager check-config /etc/alertmanager/alertmanager.yml
 }
+function Start-RegisteredRunner {
+    $runnerDirectory = Join-Path $Root 'actions-runner'
+    if ($env:OS -ne 'Windows_NT' -or -not (Test-Path (Join-Path $runnerDirectory '.runner'))) { return }
+    $listenerPath = Join-Path $runnerDirectory 'bin/Runner.Listener.exe'
+    $listeners = @(Get-Process -Name 'Runner.Listener' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $listenerPath })
+    if (-not $listeners.Count) {
+        Start-Process -FilePath $env:ComSpec -ArgumentList '/c','run.cmd' -WorkingDirectory $runnerDirectory -WindowStyle Hidden -RedirectStandardOutput (Join-Path $Runtime 'runner.log') -RedirectStandardError (Join-Path $Runtime 'runner-error.log') | Out-Null
+        Write-Host 'Reconnecting your registered GitHub Actions runner in the background.'
+    }
+}
 Initialize-Environment

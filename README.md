@@ -26,7 +26,7 @@ Grafana permits anonymous **read-only Viewer** access on the loopback-bound demo
 2. For GitHub CI/CD, double-click **CONNECT-GITHUB.cmd** and complete the one-time GitHub device sign-in. The helper downloads checksum-verified official CLI/runner archives, creates a private `pulseops` repository under the signed-in account if needed, commits/pushes the project, registers a runner, configures repository variables, saves the console link and dispatches the first deployment. It refuses a public repository and never force-pushes existing history.
 3. During the presentation, use the console's traffic buttons and switch to Grafana / GitHub Actions. The two prepared outage commands are below.
 
-GitHub setup is optional for local monitoring but necessary before demonstrating an actual GitHub Actions run. Workflow files alone are not proof that CI/CD ran. GitHub requires internet access. After a reboot, run CONNECT-GITHUB.cmd again to bring the runner online; it does not install a Windows service.
+GitHub setup is optional for local monitoring but necessary before demonstrating an actual GitHub Actions run. Workflow files alone are not proof that CI/CD ran. GitHub requires internet access. After a reboot, START.cmd automatically reconnects the registered runner in the background; it does not install a Windows service. You do not need to repeat the GitHub connection helper for routine starts.
 
 Use `scripts/connect-github.ps1 -Repository owner/name` to select an existing private repository. The repository must have compatible history and use `main`. The helper does not grant new organizational permissions or change repository visibility. GitHub CLI authentication uses your normal credential storage; tokens are not written into project source.
 
