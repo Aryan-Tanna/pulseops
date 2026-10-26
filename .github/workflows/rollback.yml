@@ -1,0 +1,22 @@
+name: Restore previous local release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pulseops-local-release
+  cancel-in-progress: false
+jobs:
+  rollback:
+    if: vars.PULSEOPS_RUNNER_READY == 'true'
+    runs-on: [self-hosted, Windows, X64, pulseops]
+    timeout-minutes: 5
+    env:
+      PULSEOPS_HOME: ${{ vars.PULSEOPS_HOME }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Restore and verify previous image
+        shell: powershell
+        run: ./scripts/rollback.ps1

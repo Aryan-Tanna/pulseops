@@ -1,0 +1,82 @@
+name: pulseops
+services:
+  app:
+    image: ${APP_IMAGE:-pulseops-app:local}
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      APP_DB: /data/tasks.db
+      DEMO_ENABLED: "true"
+    volumes:
+      - tasks:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health',timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+  console:
+    image: ${CONSOLE_IMAGE:-pulseops-console:local}
+    build: .
+    command: ["gunicorn", "--bind", "0.0.0.0:9001", "--workers", "1", "--threads", "8", "--timeout", "30", "console.server:app"]
+    ports:
+      - "127.0.0.1:9001:9001"
+    environment:
+      CONSOLE_DB: /data/console.db
+      APP_URL: http://app:8000
+      PROM_URL: http://prometheus:9090
+      ALERT_URL: http://alertmanager:9093
+      GRAFANA_URL: http://grafana:3000
+    volumes:
+      - console-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9001/health',timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=1GB
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:13.2.2
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Run START.cmd to generate your local password}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/application.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml", "--storage.path=/alertmanager"]
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    restart: unless-stopped
+volumes:
+  tasks:
+  console-data:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:

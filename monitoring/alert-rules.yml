@@ -1,0 +1,27 @@
+groups:
+  - name: application
+    rules:
+      - alert: WebAppMetricsUnreachable
+        expr: up{job="webapp"} == 0
+        for: 20s
+        labels:
+          severity: critical
+        annotations:
+          summary: Application metrics endpoint is unreachable
+          description: Prometheus has been unable to scrape the application for 20 seconds. Check the application and its network path.
+      - alert: HighServerErrorRate
+        expr: (sum(rate(webapp_http_requests_total{job="webapp",status=~"5.."}[1m])) / sum(rate(webapp_http_requests_total{job="webapp"}[1m])) > 0.10) and (sum(rate(webapp_http_requests_total{job="webapp"}[1m])) > 0.5)
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: More than 10% of requests are returning server errors
+          description: The one-minute error ratio exceeded 10% for 30 seconds, with traffic above 0.5 requests per second.
+      - alert: HighResponseLatency
+        expr: (histogram_quantile(0.95, sum by(le)(rate(webapp_http_request_duration_seconds_bucket{job="webapp"}[1m]))) > 1) and (sum(rate(webapp_http_requests_total{job="webapp"}[1m])) > 0.5)
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Estimated p95 response duration exceeds one second
+          description: The one-minute p95 response duration exceeded one second for 30 seconds under active traffic.

@@ -1,0 +1,16 @@
+name: Validate pull request
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test application and validate monitoring
+        shell: pwsh
+        run: ./scripts/check.ps1

@@ -1,0 +1,25 @@
+rule_files:
+  - alert-rules.yml
+evaluation_interval: 5s
+tests:
+  - interval: 5s
+    input_series:
+      - series: 'up{job="webapp",instance="app:8000"}'
+        values: '1 0 0 0 0 0 1'
+    alert_rule_test:
+      - eval_time: 20s
+        alertname: WebAppMetricsUnreachable
+        exp_alerts: []
+      - eval_time: 25s
+        alertname: WebAppMetricsUnreachable
+        exp_alerts:
+          - exp_labels:
+              job: webapp
+              instance: app:8000
+              severity: critical
+            exp_annotations:
+              summary: Application metrics endpoint is unreachable
+              description: Prometheus has been unable to scrape the application for 20 seconds. Check the application and its network path.
+      - eval_time: 30s
+        alertname: WebAppMetricsUnreachable
+        exp_alerts: []

@@ -1,0 +1,42 @@
+name: Test, build and deploy locally
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pulseops-local-release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: vars.PULSEOPS_RUNNER_READY == 'true'
+    runs-on: [self-hosted, Windows, X64, pulseops]
+    timeout-minutes: 20
+    env:
+      PULSEOPS_HOME: ${{ vars.PULSEOPS_HOME }}
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Checkout trusted release
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build versioned image
+        run: |
+          $version = (Get-Content version.txt -Raw).Trim()
+          docker build --build-arg "APP_VERSION=$version" --build-arg "COMMIT_SHA=$env:GITHUB_SHA" --tag "pulseops-app:$env:GITHUB_SHA" .
+          if ($LASTEXITCODE -ne 0) { throw 'Image build failed' }
+      - name: Test the exact release image
+        run: |
+          docker run --rm --entrypoint python "pulseops-app:$env:GITHUB_SHA" -m unittest discover -s tests -v
+          if ($LASTEXITCODE -ne 0) { throw 'Application tests failed' }
+      - name: Deploy and verify release
+        run: ./scripts/deploy.ps1 -Tag $env:GITHUB_SHA -SkipBuild -SkipTests
+      - name: Verify monitoring target
+        run: ./scripts/verify.ps1
+      - name: Publish release summary
+        run: |
+          $release = Get-Content "$env:PULSEOPS_HOME/.runtime/current-release.json" -Raw | ConvertFrom-Json
+          "## Local release verified`nVersion: $($release.version)`nCommit: $($release.commit)`n`nOpen http://localhost:9001 on the demo laptop." | Out-File $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
